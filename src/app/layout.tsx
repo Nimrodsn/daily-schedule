@@ -3,6 +3,7 @@ import { Heebo } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { DirectionProvider } from "@/components/ui/direction";
+import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
 
@@ -35,7 +36,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${heebo.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
-        <DirectionProvider dir="rtl">{children}</DirectionProvider>
+        <DirectionProvider dir="rtl">
+          {children}
+          <Toaster position="top-center" dir="rtl" richColors />
+        </DirectionProvider>
       </body>
     </html>
   );
