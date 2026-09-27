@@ -1,11 +1,11 @@
-import { StagePlaceholder } from "@/components/stage-placeholder";
+import type { Metadata } from "next";
+
+import { TemplateScreen } from "@/components/template/template-screen";
+
+export const metadata: Metadata = {
+  title: "תבנית · היום שלי",
+};
 
 export default function TemplatePage() {
-  return (
-    <StagePlaceholder
-      title="התבנית השבועית"
-      subtitle="המשימות הקבועות שחוזרות בכל שבוע"
-      stage="שלב 3"
-    />
-  );
+  return <TemplateScreen />;
 }
