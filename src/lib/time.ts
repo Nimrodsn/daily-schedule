@@ -205,14 +205,82 @@ export function formatHebrewDateShort(date: IsoDate): string {
   }).format(utcAnchor(date));
 }
 
-/** The Hebrew-calendar date, e.g. "ט״ו בתשרי תשפ״ו". */
+const GEMATRIA: readonly [number, string][] = [
+  [400, "ת"],
+  [300, "ש"],
+  [200, "ר"],
+  [100, "ק"],
+  [90, "צ"],
+  [80, "פ"],
+  [70, "ע"],
+  [60, "ס"],
+  [50, "נ"],
+  [40, "מ"],
+  [30, "ל"],
+  [20, "כ"],
+  [10, "י"],
+  [9, "ט"],
+  [8, "ח"],
+  [7, "ז"],
+  [6, "ו"],
+  [5, "ה"],
+  [4, "ד"],
+  [3, "ג"],
+  [2, "ב"],
+  [1, "א"],
+];
+
+/**
+ * Hebrew numerals, e.g. 17 -> "י״ז" and 787 -> "תשפ״ז".
+ *
+ * Intl cannot do this: ECMA-402 only permits decimal numbering systems, so
+ * asking for `nu-hebr` silently falls back to Latin digits.
+ */
+export function toGematria(value: number): string {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new RangeError(`Gematria needs a positive integer, got ${value}`);
+  }
+
+  let remaining = value;
+  let letters = "";
+
+  while (remaining > 0) {
+    // 15 and 16 are written ט״ו and ט״ז rather than spelling a divine name.
+    if (remaining === 15 || remaining === 16) {
+      letters += remaining === 15 ? "טו" : "טז";
+      break;
+    }
+
+    const step = GEMATRIA.find(([amount]) => amount <= remaining)!;
+    letters += step[1];
+    remaining -= step[0];
+  }
+
+  return letters.length === 1
+    ? `${letters}׳`
+    : `${letters.slice(0, -1)}״${letters.slice(-1)}`;
+}
+
+/** The Hebrew-calendar date, e.g. "י״ז בתשרי תשפ״ז". */
 export function formatHebrewCalendarDate(date: IsoDate): string {
-  return new Intl.DateTimeFormat("he-u-ca-hebrew", {
+  const parts = new Intl.DateTimeFormat("he", {
+    calendar: "hebrew",
     timeZone: "UTC",
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(utcAnchor(date));
+  }).formatToParts(utcAnchor(date));
+
+  const find = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  const day = toGematria(Number(find("day")));
+  // Years are conventionally written without the thousands: 5787 -> תשפ״ז.
+  const year = toGematria(Number(find("year")) % 1000);
+  // formatToParts gives the bare month name; the composed form prefixes it.
+  const month = `ב${find("month")}`;
+
+  return `${day} ${month} ${year}`;
 }
 
 /** Relative label used in headers and the week strip. */

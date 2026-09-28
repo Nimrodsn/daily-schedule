@@ -1,15 +1,27 @@
-import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Providers } from "@/components/providers";
 import { getUser } from "@/lib/supabase/server";
 
+function SessionError() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center p-6">
+      <div className="max-w-sm space-y-2 text-center">
+        <h1 className="text-lg font-semibold">אין חיבור לחשבון</h1>
+        <p className="text-sm text-muted-foreground">
+          לא הצלחנו להתחבר לשרת. בדוק את החיבור לרשת ורענן את הדף.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  // The proxy already redirects unauthenticated requests, but the Next.js docs
-  // are explicit that it must not be the only check.
+  // The proxy signs the single account in and refreshes its cookie. A Server
+  // Component cannot write cookies, so it can only report the failure.
   const user = await getUser();
-  if (!user) redirect("/login");
+  if (!user) return <SessionError />;
 
   return (
     <Providers>

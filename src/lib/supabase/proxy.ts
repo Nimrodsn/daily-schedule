@@ -2,23 +2,18 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { publicEnv } from "@/lib/env";
+import { serverEnv } from "@/lib/env.server";
 
 import type { Database } from "./database.types";
 
-/** Paths reachable without a session. Everything else redirects to /login. */
-const PUBLIC_PATHS = ["/login", "/offline", "/auth"];
-
-function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
-}
-
 /**
- * Refreshes the Supabase session cookie on every navigation and gates access.
+ * Keeps the single account signed in.
  *
- * Per the Next.js docs this is a convenience layer only; server actions and
- * route handlers verify the session themselves rather than trusting the proxy.
+ * This app has exactly one user and no login screen, so instead of gating
+ * requests the proxy establishes the session itself: it refreshes the cookie
+ * on every navigation and, when there is none, signs in with the credentials
+ * held in server-side environment variables. Row level security is unchanged,
+ * which is why the browser still gets a real session rather than open access.
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -48,23 +43,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+  if (!user) {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: serverEnv.APP_USER_EMAIL,
+      password: serverEnv.APP_USER_PASSWORD,
+    });
 
-  if (!user && !isPublicPath(pathname)) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.search = "";
-    if (pathname !== "/") {
-      redirectUrl.searchParams.set("next", pathname);
+    if (error) {
+      // Nothing the user can do about it, so let the page render its own
+      // error state rather than redirecting into a dead end.
+      console.error("automatic sign-in failed", error.status, error.message);
     }
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  if (user && pathname === "/login") {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
   }
 
   return response;

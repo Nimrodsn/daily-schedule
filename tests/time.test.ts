@@ -18,6 +18,7 @@ import {
   snoozeByMinutes,
   timeToMinutes,
   todayIso,
+  toGematria,
   weekStrip,
 } from "@/lib/time";
 
@@ -215,9 +216,40 @@ describe("Hebrew formatting", () => {
     expect(formatted).toContain("27");
   });
 
-  it("formats the Hebrew-calendar date", () => {
-    // 2026-09-27 falls in Tishrei 5787.
-    expect(formatHebrewCalendarDate("2026-09-27")).toContain("תשרי");
+  it("formats the Hebrew-calendar date in Hebrew numerals", () => {
+    // 2026-09-27 is 16 Tishrei 5787.
+    expect(formatHebrewCalendarDate("2026-09-27")).toBe("ט״ז בתשרי תשפ״ז");
+  });
+});
+
+describe("toGematria", () => {
+  it("writes single letters with a geresh", () => {
+    expect(toGematria(1)).toBe("א׳");
+    expect(toGematria(9)).toBe("ט׳");
+    expect(toGematria(10)).toBe("י׳");
+  });
+
+  it("writes multiple letters with gershayim before the last", () => {
+    expect(toGematria(11)).toBe("י״א");
+    expect(toGematria(17)).toBe("י״ז");
+    expect(toGematria(30)).toBe("ל׳");
+  });
+
+  it("avoids spelling a divine name at 15 and 16", () => {
+    expect(toGematria(15)).toBe("ט״ו");
+    expect(toGematria(16)).toBe("ט״ז");
+  });
+
+  it("handles years without the thousands", () => {
+    expect(toGematria(787)).toBe("תשפ״ז");
+    expect(toGematria(786)).toBe("תשפ״ו");
+    expect(toGematria(700)).toBe("ת״ש");
+  });
+
+  it("rejects values it cannot express", () => {
+    expect(() => toGematria(0)).toThrow(RangeError);
+    expect(() => toGematria(-1)).toThrow(RangeError);
+    expect(() => toGematria(1.5)).toThrow(RangeError);
   });
 });
 
