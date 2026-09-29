@@ -64,7 +64,7 @@ function TemplateRow({
       <button
         type="button"
         onClick={() => onEdit(template)}
-        className="flex min-h-11 flex-1 items-center gap-3 rounded-lg px-1 text-start focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-lg px-1 text-start focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         {template.icon ? (
           <span aria-hidden="true" className="text-lg">

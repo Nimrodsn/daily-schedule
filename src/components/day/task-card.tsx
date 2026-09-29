@@ -123,10 +123,12 @@ export function TaskCard({
           />
         </span>
 
+        {/* min-w-0: without it a long title cannot shrink, and it shoves the
+            time and the menu button past the edge of the card. */}
         <button
           type="button"
           onClick={() => actions.onEdit(task)}
-          className="flex min-h-11 flex-1 items-center gap-2.5 rounded-lg px-1 text-start focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1 text-start focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           {task.icon ? (
             <span aria-hidden="true" className="text-lg">
@@ -137,7 +139,7 @@ export function TaskCard({
           <span className="min-w-0 flex-1">
             <span
               className={cn(
-                "flex items-center gap-1.5 text-[15px]",
+                "flex min-w-0 items-center gap-1.5 text-[15px]",
                 (done || cancelled) && "text-muted-foreground line-through",
               )}
             >
